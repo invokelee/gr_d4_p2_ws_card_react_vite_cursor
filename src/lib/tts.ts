@@ -1,5 +1,4 @@
-/** Vite 프록시 → OpenAI `POST /v1/audio/speech` */
-export const TTS_SPEECH_PATH = "/openai-proxy/v1/audio/speech";
+import { openAiSpeechUrl } from "./openaiRelay";
 
 const DEFAULT_TTS_MODEL = "tts-1";
 const DEFAULT_VOICE = "nova";
@@ -49,7 +48,7 @@ export async function fetchSpeechMp3(
   const voice =
     import.meta.env.VITE_OPENAI_TTS_VOICE?.trim() || DEFAULT_VOICE;
 
-  const res = await fetch(TTS_SPEECH_PATH, {
+  const res = await fetch(openAiSpeechUrl(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     signal: options.signal,

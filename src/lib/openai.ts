@@ -1,4 +1,5 @@
 import type { QuoteCardData } from "./types";
+import { openAiChatCompletionsUrl } from "./openaiRelay";
 
 const SYSTEM_INSTRUCTION = `당신은 한국 태생의 유명인(역사·문학·과학·예술·사회운동 등)이 남긴 실제 명언을 선별합니다.
 반드시 실존 인물의 출처가 분명한 인용만 사용하고, 불확실하면 다른 인물·명언으로 교체합니다.
@@ -74,15 +75,12 @@ function toQuoteCardData(raw: unknown): QuoteCardData {
   };
 }
 
-/** 동일 출처 프록시(Vite `server.proxy`) — CORS 없이 OpenAI 호출. 키는 서버(프록시)에서 붙음 */
-const CHAT_COMPLETIONS_PATH = "/openai-proxy/v1/chat/completions";
-
 export async function fetchQuoteFromOpenAI(
   _apiKey: string,
   model: string,
   seedHint: string,
 ): Promise<QuoteCardData> {
-  const res = await fetch(CHAT_COMPLETIONS_PATH, {
+  const res = await fetch(openAiChatCompletionsUrl(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

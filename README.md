@@ -68,22 +68,63 @@ npm run preview
 
 ## OpenAPI 호출과 CORS
 
-브라우저에서 `https://api.openai.com`으로 직접 호출하면 CORS로 막히는 경우가 많습니다. 이 프로젝트는 **Vite 프록시**로 같은 출처 경로 **`/openai-proxy`** 를 쓰고, 개발/프리뷰 서버가 `Authorization` 헤더를 붙여 OpenAI로 전달합니다.
+브라우저에서 `https://api.openai.com`으로 직접 호출하면 CORS로 막히는 경우가 많습니다. 이 프로젝트는 **같은 출처로만** OpenAI에 접근합니다.
 
-| 용도 | 브라우저가 호출하는 경로 |
-|------|-------------------------|
-| 명언 생성 | `POST /openai-proxy/v1/chat/completions` |
-| TTS | `POST /openai-proxy/v1/audio/speech` |
+| 환경 | 릴레이 방식 | 브라우저 경로 예 |
+|------|-------------|-----------------|
+| **로컬** `npm run dev` / `npm run preview` | Vite `server.proxy` | `POST /openai-proxy/v1/chat/completions`, `POST /openai-proxy/v1/audio/speech` |
+| **Vercel** | `api/*.ts` 서버리스 함수 | `POST /api/chat-completions`, `POST /api/audio-speech` |
 
-**`dist`만 정적 호스팅**(예: GitHub Pages 단독)하면 Vite 서버가 없어 위 경로가 **404**가 되며, 명언·듣기 기능은 동작하지 않습니다.
+Vercel에서는 빌드 시 `process.env.VERCEL`이 설정되어 클라이언트 번들에 **`/api` 릴레이**가 박힙니다(`vite.config.ts`의 `define`).
 
-## 배포(지인 소수 공유·터널 없음)
+**`dist`만 정적 호스팅**(GitHub Pages 단독 등)하면 위 릴레이가 없어 **명언·듣기가 동작하지 않습니다.**
 
-로컬 터널(ngrok, cloudflared 등) 없이 인터넷에 올리려면 **정적 프론트 + OpenAI 프록시**가 함께 있어야 합니다.
+## Vercel 배포(터널 없음)
 
-- **권장**: [Netlify](https://www.netlify.com/) / [Vercel](https://vercel.com/) / [Cloudflare Pages](https://pages.cloudflare.com/) 등에 **빌드 산출물**을 올리고, **서버리스 함수 또는 Worker**에서 Chat·Speech만 대리 호출. API 키는 **호스팅 대시보드의 환경 변수**에만 저장합니다.
-- **GitHub Pages만**: 정적 파일은 제공 가능하나, 위 프록시가 없으면 **이 저장소의 앱 기능은 그대로는 불가**합니다. Pages를 쓰려면 별도 Worker URL 등으로 `fetch` 베이스를 바꾸는 추가 작업이 필요합니다.
-- **저장소 이름으로 Pages에 올릴 때**: Vite `base`를 `'/저장소이름/'` 등 실제 경로에 맞춰야 자산 URL이 깨지지 않습니다.
+이 저장소에는 **`vercel.json`** 과 **`api/chat-completions.ts`**, **`api/audio-speech.ts`** 가 포함되어 있습니다. 배포 후 프론트는 `/api/*` 로 OpenAI를 호출하고, **API 키는 서버리스 환경 변수**에서만 사용합니다.
+
+### 1) Vercel에 프로젝트 연결
+
+1. [Vercel Dashboard](https://vercel.com/dashboard)에 로그인합니다.
+2. **Add New… → Project** 에서 본 저장소 GitHub 저장소를 **Import** 합니다 (또는 CLI로 연결).
+
+### 2) 환경 변수 설정
+
+프로젝트 **Settings → Environment Variables** 에서 다음을 추가합니다 (**Production**과 **Preview** 모두 필요하면 동일하게 등록).
+
+| 이름 | 필수 | 설명 |
+|------|------|------|
+| **`OPENAI_API_KEY`** | 예 | 서버리스 프록시가 OpenAI 호출 시 사용. **값은 클라이언트 번들에 넣히지 않습니다.** |
+| `VITE_OPENAI_MODEL` | 아니오 | Chat 모델(기본 `gpt-4o-mini`). 클라이언트 빌드에 포함됩니다. |
+| `VITE_OPENAI_TTS_MODEL` | 아니오 | TTS 모델(기본 `tts-1`). |
+| `VITE_OPENAI_TTS_VOICE` | 아니오 | TTS 보이스(기본 `nova`). |
+
+또한 **`OPENAI_API_KEY`는 빌드 시점에도** 읽히므로(**`vite.config`의 `loadEnv`**), **「새 명언 만들기」 버튼 활성 플래그**가 켜지려면 변수 스코프에서 **Build** 에도 포함되도록 설정합니다(Vercel UI에서 해당 환경에 체크).
+
+공개 저장소라면 **`VITE_OPENAI_API_KEY`는 넣지 않는 것**을 권장합니다(키가 번들에 포함될 수 있음). **`OPENAI_API_KEY`만**으로 서버 호출과 버튼 활성 조건을 맞출 수 있습니다.
+
+### 3) 배포 실행
+
+Dashboard에서 **Deploy** 하거나, 로컬에서 [Vercel CLI](https://vercel.com/docs/cli) 사용:
+
+```bash
+npm i -g vercel
+cd /경로/ws_card_react_vite
+vercel login
+vercel link   # 최초 1회 프로젝트 연결
+vercel --prod
+```
+
+완료 후 표시되는 **`https://<프로젝트>.vercel.app`** URL로 접속해 앱을 실행합니다.
+
+### 4) 기타
+
+- `vercel.json`의 SPA용 **rewrite**는 `/api/*`를 제외하고 `index.html`로 넘깁니다.
+- 서버리스 **최대 실행 시간**은 `maxDuration`: 60초로 두었습니다(플랜에 따라 한도가 다를 수 있음).
+
+## 기타 호스팅(Netlify 등)
+
+동일하게 **정적 빌드 + 별도의 Chat/TTS 프록시** 패턴으로 옮길 수 있습니다. GitHub Pages **단독**은 릴레이가 없어 이 앱의 API 기능만으로는 불완전합니다.
 
 ## 배경 이미지
 
@@ -99,11 +140,16 @@ src/
     QuoteCard.tsx       # 명언 카드(배경·듣기 버튼·메타)
     SpeechPlayButton.tsx
   lib/
-    openai.ts           # Chat Completions + JSON 파싱
-    tts.ts              # audio/speech·전역 재생 정리
+    openaiRelay.ts       # 로컬/ Vercel OpenAI 릴레이 URL 분기
+    openai.ts            # Chat Completions + JSON 파싱
+    tts.ts               # audio/speech·전역 재생 정리
     backgrounds.ts
     types.ts
-vite.config.ts          # 포트 8861, 프록시, 키 설정 플래그 주입
+api/
+  chat-completions.ts   # Vercel: Chat 프록시
+  audio-speech.ts       # Vercel: TTS 프록시
+vercel.json             # Vercel 빌드·SPA rewrite·함수 시간
+vite.config.ts          # 포트 8861, 프록시, define 주입
 public/img/           # 배경 JPG
 ```
 

@@ -27,6 +27,8 @@ export default defineConfig(({ mode }) => {
   const apiKey =
     env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "";
   const openAiConfigured = Boolean(apiKey);
+  /** Vercel 빌드에서는 서버리스 `/api/*` 로 OpenAI 프록시 */
+  const relayPrefix = process.env.VERCEL ? "/api" : "/openai-proxy";
 
   return {
     plugins: [react()],
@@ -34,6 +36,7 @@ export default defineConfig(({ mode }) => {
     /** 클라이언트는 OPENAI_API_KEY 를 볼 수 없으므로, 설정 여부만 주입 */
     define: {
       __OPENAI_KEY_CONFIGURED__: JSON.stringify(openAiConfigured),
+      __OPENAI_HTTP_PREFIX__: JSON.stringify(relayPrefix),
     },
     server: {
       port: 8861,
