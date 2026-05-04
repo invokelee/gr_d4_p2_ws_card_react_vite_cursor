@@ -133,10 +133,19 @@ vercel --prod
 
 완료 후 표시되는 **`https://<프로젝트>.vercel.app`** URL로 접속해 앱을 실행합니다.
 
+**배포 확인**: Dashboard → **Deployments** 에서 최근 빌드가 **Ready** 인지 보고, 할당된 도메인으로 브라우저에서 명언 생성·TTS를 점검합니다. `main` 등에 **push** 하면 자동으로 새 Preview/Production 배포가 돌아가도록 GitHub와 연결됩니다.
+
 ### 5) 기타
 
 - `vercel.json`의 SPA용 **rewrite**는 `/api/*`를 제외하고 `index.html`로 넘깁니다.
 - 서버리스 **최대 실행 시간**은 `maxDuration`: 60초로 두었습니다(플랜에 따라 한도가 다를 수 있음).
+
+## Vercel과 GitHub Pages
+
+- **서로 다른 호스팅**입니다. GitHub에 저장소를 두고 Vercel에서 **Import**해 배포했다면, 사용자에게 보이는 주소는 보통 **`*.vercel.app`**(또는 연결한 커스텀 도메인)입니다.
+- **GitHub Pages** 에서 같은 앱이 자동으로 열리지는 **않습니다.** Pages를 쓰려면 `gh-pages` 브랜치·Actions 등 **별도 설정**으로 `dist`를 올려야 합니다.
+- 이 프로젝트는 **서버리스 `/api/*` 프록시**가 필요하므로, **GitHub Pages만** 정적 파일로 호스팅하면 명언·TTS가 동작하지 않습니다. Pages까지 쓰려면 프록시를 **별도(예: Workers)** 에 두고 프론트의 API 주소를 맞추는 추가 작업이 필요합니다.
+- **실서비스 URL은 Vercel 쪽 하나로 통일**해 두면 충분한 경우가 많습니다.
 
 ## 기타 호스팅(Netlify 등)
 
@@ -165,6 +174,8 @@ api/
   chat-completions.ts   # Vercel: Chat 프록시
   audio-speech.ts       # Vercel: TTS 프록시
 vercel.json             # Vercel 빌드·SPA rewrite·함수 시간
+scripts/
+  vercel-push-openai-key.mjs  # 로컬 .env → Vercel OPENAI_API_KEY (`npm run vercel:push-key`)
 vite.config.ts          # 포트 8861, 프록시, define 주입
 public/img/           # 배경 JPG
 ```
