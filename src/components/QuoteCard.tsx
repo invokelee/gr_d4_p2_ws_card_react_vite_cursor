@@ -1,6 +1,8 @@
-import type { CSSProperties } from "react";
+import { useEffect, type CSSProperties } from "react";
 import type { QuoteCardData } from "../lib/types";
 import { resolveBackgroundUrl } from "../lib/backgrounds";
+import { stopAllSpeechPlayback } from "../lib/tts";
+import { SpeechPlayButton } from "./SpeechPlayButton";
 
 type Props = {
   data: QuoteCardData;
@@ -20,6 +22,10 @@ function formatLifespan(d: QuoteCardData): string {
 export function QuoteCard({ data }: Props) {
   const bg = resolveBackgroundUrl(data.backgroundIndex);
 
+  useEffect(() => {
+    stopAllSpeechPlayback();
+  }, [data.quoteKo, data.quoteEn]);
+
   return (
     <article
       className="quote-card m3-elevation-2"
@@ -28,12 +34,20 @@ export function QuoteCard({ data }: Props) {
       <div className="quote-card__scrim" aria-hidden />
       <div className="quote-card__content">
         <div className="quote-card__eyebrow m3-label-large">한국을 빛낸 말</div>
-        <blockquote className="quote-card__quote m3-headline-small">
-          <p lang="ko">{data.quoteKo}</p>
-        </blockquote>
-        <p className="quote-card__translation m3-body-large" lang="en">
-          {data.quoteEn}
-        </p>
+        <div className="quote-card__text-row">
+          <SpeechPlayButton text={data.quoteKo} lang="ko" />
+          <blockquote className="quote-card__quote m3-headline-small">
+            <p lang="ko">{data.quoteKo}</p>
+          </blockquote>
+        </div>
+        <div className="quote-card__text-row">
+          <SpeechPlayButton text={data.quoteEn} lang="en" />
+          <div className="quote-card__translation-wrap">
+            <p className="quote-card__translation m3-body-large" lang="en">
+              {data.quoteEn}
+            </p>
+          </div>
+        </div>
         <footer className="quote-card__meta">
           <div className="quote-card__name m3-title-large">{data.name}</div>
           <p className="quote-card__achievements m3-body-medium">

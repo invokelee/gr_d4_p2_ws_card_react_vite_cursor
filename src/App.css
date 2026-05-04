@@ -182,6 +182,25 @@
   color: rgba(168, 244, 232, 0.95);
 }
 
+.quote-card__text-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--m3-space-sm);
+}
+
+.quote-card__text-row .quote-card__quote {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.quote-card__translation-wrap {
+  flex: 1;
+  min-width: 0;
+  border-left: 3px solid var(--md-sys-color-primary);
+  padding-left: var(--m3-space-lg);
+}
+
 .quote-card__quote p {
   margin: 0;
 }
@@ -190,8 +209,79 @@
   font-family: var(--font-en);
   font-style: italic;
   color: rgba(232, 238, 240, 0.92);
-  border-left: 3px solid var(--md-sys-color-primary);
-  padding-left: var(--m3-space-lg);
+}
+
+/* OpenAI TTS 듣기 버튼 */
+.speech-btn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--m3-space-xs);
+  flex-shrink: 0;
+}
+
+.speech-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(8, 16, 18, 0.45);
+  color: rgba(168, 244, 232, 0.98);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.speech-btn:hover:not(:disabled) {
+  background: rgba(93, 213, 200, 0.22);
+  transform: scale(1.04);
+}
+
+.speech-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.speech-btn--loading {
+  pointer-events: none;
+}
+
+.speech-btn--loading .speech-btn__icon {
+  opacity: 0.25;
+}
+
+.speech-btn__icon {
+  display: block;
+}
+
+.speech-btn__spinner {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: speech-spin 0.7s linear infinite;
+}
+
+.speech-btn__err {
+  max-width: 120px;
+  text-align: center;
+  color: #ffb4ab;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes speech-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .quote-card__meta {
