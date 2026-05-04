@@ -103,7 +103,21 @@ Vercel에서는 빌드 시 `process.env.VERCEL`이 설정되어 클라이언트 
 
 공개 저장소라면 **`VITE_OPENAI_API_KEY`는 넣지 않는 것**을 권장합니다(키가 번들에 포함될 수 있음). **`OPENAI_API_KEY`만**으로 서버 호출과 버튼 활성 조건을 맞출 수 있습니다.
 
-### 3) 배포 실행
+### 3) `OPENAI_API_KEY` 를 환경 변수로 넣기
+
+- **대시보드**: Project → **Settings** → **Environment Variables** → 이름 `OPENAI_API_KEY`, 값에 키 입력 → **Production**, **Preview**, **Development**(로컬 빌드 연동 시)에 추가 → **Save**.
+- **CLI (로컬 `.env` 값을 그대로 등록)**:
+
+  ```bash
+  cd /경로/ws_card_react_vite
+  vercel login
+  vercel link          # 최초 1회, 이 저장소와 같은 Vercel 프로젝트에 연결
+  npm run vercel:push-key
+  ```
+
+  `scripts/vercel-push-openai-key.mjs` 가 `production` / `preview` / `development` 세 환경 모두에 같은 키를 올립니다(이미 있으면 `--force`로 덮어씀).
+
+### 4) 배포 실행
 
 Dashboard에서 **Deploy** 하거나, 로컬에서 [Vercel CLI](https://vercel.com/docs/cli) 사용:
 
@@ -115,9 +129,11 @@ vercel link   # 최초 1회 프로젝트 연결
 vercel --prod
 ```
 
+환경 변수 등록 후에는 **Redeploy** 한 번 해 두면 프록시·프론트 빌드 모두 새 값을 씁니다.
+
 완료 후 표시되는 **`https://<프로젝트>.vercel.app`** URL로 접속해 앱을 실행합니다.
 
-### 4) 기타
+### 5) 기타
 
 - `vercel.json`의 SPA용 **rewrite**는 `/api/*`를 제외하고 `index.html`로 넘깁니다.
 - 서버리스 **최대 실행 시간**은 `maxDuration`: 60초로 두었습니다(플랜에 따라 한도가 다를 수 있음).
